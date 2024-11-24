@@ -38,15 +38,6 @@ class _ChatScreenState extends State<ChatScreen> {
     getCurrentUser();
   }
 
-  // void getMessageStream() async{
-  //   await for(var snapshot in _firestore.collection('messages').snapshots()){
-  //     for(var msg in snapshot.docChanges){
-  //       print('${msg.doc.data()?.entries.last.value} from ${msg.doc.data()?.entries.first.value}');
-  //     }
-  //   }
-  //
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
