@@ -38,14 +38,14 @@ class _ChatScreenState extends State<ChatScreen> {
     getCurrentUser();
   }
 
-  void getMessageStream() async{
-    await for(var snapshot in _firestore.collection('messages').snapshots()){
-      for(var msg in snapshot.docChanges){
-        print('${msg.doc.data()?.entries.last.value} from ${msg.doc.data()?.entries.first.value}');
-      }
-    }
-
-  }
+  // void getMessageStream() async{
+  //   await for(var snapshot in _firestore.collection('messages').snapshots()){
+  //     for(var msg in snapshot.docChanges){
+  //       print('${msg.doc.data()?.entries.last.value} from ${msg.doc.data()?.entries.first.value}');
+  //     }
+  //   }
+  //
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +69,7 @@ class _ChatScreenState extends State<ChatScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            MessageStream(),
+            const MessageStream(),
             Container(
               decoration: kMessageContainerDecoration,
               child: Row(
@@ -90,6 +90,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       _firestore.collection('messages').add({
                         'message': message,
                         'sender': loggedInUser.email,
+                        'time': DateTime.now()
                       });
                       setState(() {
                         message = '';
@@ -126,21 +127,24 @@ class MessageStream extends StatelessWidget {
           );
         }
         List<MessageBubble> messageWidgets = [];
-        final messages = snapshot.data?.docs.reversed;
+        final notSortedMessages = snapshot.data!.docs;
+        notSortedMessages.sort((a,b) => a['time'].compareTo(b['time']));
+        var messages = List.from(notSortedMessages);
 
         String? currentUser = loggedInUser.email;
 
         for(var message in messages!){
           final msgText = message.get('message').toString();
           final sender = message.get('sender').toString();
-          final msgwidget = MessageBubble(text: msgText, sender: sender, isME: currentUser == sender,);
+          final messageTime = message.get('time') as Timestamp;
+          final msgwidget = MessageBubble(text: msgText, sender: sender, time: messageTime, isME: currentUser == sender,);
           messageWidgets.add(msgwidget);
         }
         return Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
               child: ListView(
-                reverse: true,
+                // reverse: true,
                 children: messageWidgets,
               ),
             )
@@ -152,11 +156,12 @@ class MessageStream extends StatelessWidget {
 
 
 class MessageBubble extends StatelessWidget {
-  MessageBubble({super.key, required this.text, required this.sender, required this.isME});
+  MessageBubble({super.key, required this.text, required this.sender, required this.isME, required this.time});
 
   String text;
   String sender;
   final bool isME;
+  final Timestamp time;
 
   @override
   Widget build(BuildContext context) {
@@ -174,7 +179,7 @@ class MessageBubble extends StatelessWidget {
           Material(
             elevation: 10.0,
             borderRadius: isME ? const BorderRadius.only(topLeft: Radius.circular(30.0), bottomLeft: Radius.circular(30.0), bottomRight: Radius.circular(30.0)) : const BorderRadius.only(topRight: Radius.circular(30.0), bottomLeft: Radius.circular(30.0), bottomRight: Radius.circular(30.0)),
-            color: isME ? Colors.lightBlueAccent : Colors.red,
+            color: isME ? Colors.blueAccent : Colors.red,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
               child: Text(
